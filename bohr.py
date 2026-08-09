@@ -10,7 +10,7 @@ me = const.m_e
 mp = const.m_p
 h = const.h
 c= const.c
-e=const.e
+q_e=const.e
 e_0 = const.epsilon_0
 
 mu = (me*mp)/(me+mp)
@@ -20,7 +20,7 @@ reduced mass improves accuracy, bc Bohr assumed the electron orbited a fixed pro
 actually orbit CoM, so we use reduced mass.
 """
 
-E_rydberg = (mu * (e** 4))/(8*(e_0**2)* (h**2)) #ionisation energy of hydrogen
+E_rydberg = (mu * (q_e** 4))/(8*(e_0**2)* (h**2)) #ionisation energy of hydrogen
 
 #print(E_rydberg)#debug
 
@@ -45,7 +45,7 @@ def series(n_low, n_max=N_max):
         "n_low": n_low,
         "n": n_values,
         "energy": energies,
-        "energy_eV": [E/e for E in energies],
+        "energy_eV": [E/q_e for E in energies],
         "wavelengths": wavelength,
         "wavelength_nm": [L *1e9 for L in wavelength]
     }
