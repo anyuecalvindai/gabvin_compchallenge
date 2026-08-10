@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
+from matplotlib.widgets import Slider, CheckButtons
 from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 
@@ -20,7 +20,47 @@ num = 0
 Intensity0 = 5
 bragg_angle = 0
 
+themes = {
+    'simulation':  {'bg': 'black', 'fg': 'white'},
+    'graph': {'bg': 'white', 'fg': 'black'},
+}
+current_theme = 'simulation'
 
+def applyTheme(theme_name):
+    t = themes[theme_name]
+
+    fig.patch.set_facecolor(t['bg'])
+    ax.set_facecolor(t['bg'])
+    ax_slider.set_facecolor(t['bg'])
+
+    ax.xaxis.label.set_color(t['fg'])
+    ax.yaxis.label.set_color(t['fg'])
+    ax.title.set_color(t['fg'])
+    ax.tick_params(colors=t['fg'])
+    for spine in ax.spines.values():
+        spine.set_color(t['fg'])
+
+    voltage_slider.label.set_color(t['fg'])
+    voltage_slider.valtext.set_color(t['fg'])
+    
+    update(voltage_slider.val)
+    
+    if theme_name == "graph":
+        for name, circle in circles.items():
+            if name[0:2] == "d2":
+                circle.set_linestyle(":")
+            n = int(name.split("=")[1])
+            circle.set_edgecolor(f"C{n}")
+        ax.legend()
+        ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1), borderaxespad=0)
+    
+    else:
+        for name, circle in circles.items():
+            if name[0:2] == "d2":
+                circle.set_linestyle("-")
+        ax.legend().remove()
+        
+    fig.canvas.draw_idle()
 
 def Electron_Wavelength(V):
     return h/((2*Me*V*e*(1+(e*V)/(2*Me*(c**2))))**(1/2))
@@ -59,12 +99,17 @@ Intensity0 = 1e-3 * (V0)
 
 black_green = LinearSegmentedColormap.from_list("black_green", ["black", "limegreen"])
 
-fig, ax = plt.subplots(figsize=(8,6))
+fig, ax = plt.subplots(figsize=(10,6))
 plt.subplots_adjust(bottom=0.25)
 fig.patch.set_facecolor('black')
 ax.set_facecolor('black')
 
+fig.text(0.68, 0.35, "d1 = 0.123 nm\nd2 = 0.213 nm",
+          fontsize=10, ha='left', va='top',
+          )
+
 circles = {}
+
 for name, radius in radii.items():
     n = int(name.split("=")[1])
     angle = angles[name]
@@ -86,11 +131,18 @@ ax.tick_params(colors='white')
 ax.set_title(f"Diffraction Rings (V = {V0} V)", color="white")
 plt.grid(alpha=0.3)
 
-# Slider axis: [left, bottom, width, height] in figure coordinates
 ax_slider = plt.axes([0.2, 0.1, 0.6, 0.03])
-voltage_slider = Slider(ax_slider, 'Voltage (V)', 1000, 5000, valinit=V0, valstep=10)
+voltage_slider = Slider(ax_slider, 'Voltage (V)', 1000, V0, valinit=V0, valstep=10)
 voltage_slider.label.set_color('white')
 voltage_slider.valtext.set_color('white')
+
+ax_check = plt.axes([0.2, 0.02, 0.15, 0.06])
+check = CheckButtons(ax_check, ["Simulation"], [True])
+
+def BraggAngle(wavelength,d,n):
+    num = n*wavelength/(2*d)
+
+    return 2* np.arcsin(num)
 
 def update(val):
     V = voltage_slider.val
@@ -99,22 +151,29 @@ def update(val):
 
     intensityMult = 1e-3 * (V)
 
-    for name, circle in circles.items():
-        radius = radii.get(name, 0)
-        circle.set_radius(radius)
-        if name in angles:
-            n = int(name.split("=")[1])
-            intensity = get_intensity(angles[name], n, intensityMult)
-            circle.set_edgecolor(black_green(intensity))
-    ax.set_title(f"Diffraction Rings (V = {V:.0f} V)", color='white')
+    if current_theme == "simulation":
+        for name, circle in circles.items():
+            radius = radii.get(name, 0)
+            circle.set_radius(radius)
+            if name in angles:
+                n = int(name.split("=")[1])
+                intensity = get_intensity(angles[name], n, intensityMult)
+                circle.set_edgecolor(black_green(intensity))
+    else:
+        for name, circle in circles.items():
+                radius = radii.get(name, 0)
+                circle.set_radius(radius)
+    
+    ax.set_title(f"Diffraction Rings (V = {V:.0f} V)")
     fig.canvas.draw_idle()
 
-def BraggAngle(wavelength,d,n):
-    num = n*wavelength/(2*d)
-
-    return 2* np.arcsin(num)
-
-
+def toggleTheme(label):
+    global current_theme
+    if current_theme == "simulation":
+        current_theme = 'graph'
+    else:
+        current_theme = 'simulation'
+    applyTheme(current_theme)
 
 voltages = np.linspace(1000, 5000, 1000)
 wavelengths = Electron_Wavelength(voltages)
@@ -130,5 +189,8 @@ ax2.set_title("Innermost Ring Radius vs 1/√V")
 
 
 voltage_slider.on_changed(update)
+
+check.on_clicked(toggleTheme)
+applyTheme("simulation")
 
 plt.show()
