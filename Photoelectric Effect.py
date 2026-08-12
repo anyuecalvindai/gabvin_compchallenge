@@ -57,6 +57,7 @@ ax.axvline(yellow, color='yellow')
 ax.axvline(green, color='green')
 ax.axvline(blue, color='blue')
 
+ax.set_ylim(-5, 6)
 ax.set_xlim(0, 2.5e15)
 ax.set_xlabel("Frequency / Hz")
 ax.set_ylabel("Stopping Voltage / V")
