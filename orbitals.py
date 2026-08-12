@@ -2,6 +2,8 @@ import numpy as np
 import math
 from scipy import constants as const
 from scipy.special import eval_genlaguerre
+from scipy.special import lpmv
+lpmv(m, l, np.cos(theta))
 
 hbar = const.hbar
 h = const.h
@@ -9,9 +11,6 @@ pi = const.pi
 me = const.m_e
 mp = const.m_p
 a0  = const.value('Bohr radius')
-
-
-#asldkjfhalskdnbfalkjdsfhalidfjha
 
 Z = 1
 mu = (me*mp)/(me+mp)
@@ -26,3 +25,7 @@ def radial(r,n,l):
     x = 2*r/(a*n)
     return np.sqrt(math.factorial(n-l-1)/(2*n*math.factorial(n+l))) * (2/(a*n))**1.5  * x**l * np.exp(-x/2) * zeta(x,l,n)
     
+def angular(theta,phi,l,m):
+    
+    def spherharm(theta,phi,m):
+        
