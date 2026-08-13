@@ -29,11 +29,19 @@ async function bootPython() {
     py = await loadPyodide({ indexURL: PYODIDE_CDN });
   }
 
-  say('Loading numpy…');
-  try {
-    await py.loadPackage('numpy');           // resolves locally once get_runtime.py has run
-  } catch (err) {
+    say('Loading numpy…');
+  const numpyOk = () => {
+    try { py.runPython('import numpy'); return true; }
+    catch (err) { return false; }
+  };
+  await py.loadPackage('numpy');           // resolves locally once get_runtime.py has run
+  if (!numpyOk()) {
+    say('Fetching numpy from CDN…');
     await py.loadPackage(PYODIDE_CDN + NUMPY_WHEEL);
+  }
+  if (!numpyOk()) {
+    throw new Error('numpy could not be loaded — this network may block the CDN. ' +
+                    'Run "python3 get_runtime.py" and push the pyodide/ folder to fix this permanently.');
   }
 
   say('Loading the physics modules…');
