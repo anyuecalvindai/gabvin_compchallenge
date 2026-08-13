@@ -13,7 +13,7 @@ const PY_MODULES = [
   'scipy/__init__.py', 'scipy/constants.py', 'units.py',
   'blackbody.py', 'photoelectric.py', 'compton.py', 'einstein.py',
   'diffraction.py', 'cryptography.py', 'particleinbox.py', 'bohr.py',
-  'randomwalk.py', 'brownianmotion.py'
+  'randomwalk.py', 'brownianmotion.py', 'orbitals.py'
 ];
 
 async function bootPython() {
