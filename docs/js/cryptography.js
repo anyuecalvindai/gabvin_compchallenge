@@ -4,9 +4,7 @@
 PROJECTS.push({
   id: 'crypto',
   name: '8. Quantum Cryptography',
-  blurb: 'Two polarisation detectors at angles φ and θ measuring an entangled photon pair. ' +
-         'Compares the mismatch probability from a classical hidden-variable model with ' +
-         'the quantum mechanical prediction sin²(φ−θ).',
+  blurb: 'This visual calculator shows the probability of two polarisation detectors detecting different polarisations of an entangled photon pair under the classical model and the quantum mechanical model, showing how the probabilities differ depending on the model used.',
 
   async render(page) {
     let phi = 0;

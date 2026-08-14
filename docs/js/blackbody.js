@@ -3,9 +3,7 @@
 PROJECTS.push({
   id: 'blackbody',
   name: '3a. Black Body Radiation',
-  blurb: 'Planck curve for a black body. Slide the temperature to watch the peak shift ' +
-         '(Wien\'s law) and the curve change colour to match. The 5778 K solar spectrum ' +
-         'is plotted for reference, and the y-axis rescales to the adjustable curve.',
+  blurb: 'This graph shows the distribution of intensities of different light frequencies emitted by a black body at different temperatures, the colour of the graph corresponds to the peak wavelength emitted for a given temperature.',
 
   async render(page) {
     let T = 1000;

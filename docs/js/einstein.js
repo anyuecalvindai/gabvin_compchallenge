@@ -3,9 +3,7 @@
 PROJECTS.push({
   id: 'einstein',
   name: '3b. Einstein Heat Capacity',
-  blurb: 'Einstein model of the molar heat capacity of solids for seven elements, each with ' +
-         'its own Einstein frequency. Every curve approaches the Dulong-Petit limit 3R ' +
-         '(dashed line) at high temperature.',
+  blurb: 'This graph shows how molar heat capacity of different elements varies with temperature. Note how the molar heat capacity tends towards 3R (the dashed line).',
 
   async render(page) {
     const plotDiv = el('div');

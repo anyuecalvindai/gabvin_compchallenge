@@ -3,10 +3,7 @@
 PROJECTS.push({
   id: 'diffraction',
   name: '6. Electron Diffraction',
-  blurb: 'Bragg diffraction rings from a polycrystalline graphite target (plane spacings ' +
-         'd1 = 0.123 nm, d2 = 0.213 nm) on a screen 65 mm away. Toggle between the ' +
-         'phosphor-screen simulation and an annotated graph view. Below: the linearisation ' +
-         'sin(½ϕ) ∝ 1/√V for the innermost ring.',
+  blurb: 'A simulation of the rings formed when electrons diffract through a carbon disk to hit a spherical phosphor screen 65mm away. Each ring is caused by an electron diffracting through one of the two spacings in a graphite lattice, at different orders of diffraction. Relative intensity is abstracted from the angle by which the electrons scatter and the order of diffraction. To see which spacing and order of diffraction creates each ring toggle graph view.',
 
   async render(page) {
     const SIZE = 520;

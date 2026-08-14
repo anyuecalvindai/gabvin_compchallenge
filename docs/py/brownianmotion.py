@@ -38,7 +38,6 @@ def init():
     mass = np.concatenate(([M_trac], np.full(n_bath, m_bath)))
     radius = np.concatenate(([R_trac], np.full(n_bath, r_bath)))
 
-    # positions: tracer at centre, bath on a jittered lattice that clears it.
     # grow the lattice until enough sites survive the tracer exclusion, otherwise
     # a big tracer or a large n_bath silently leaves pos shorter than mass/radius
     k = int(np.ceil(np.sqrt(n_bath * 1.6)))

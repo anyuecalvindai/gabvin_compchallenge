@@ -3,9 +3,7 @@
 PROJECTS.push({
   id: 'compton',
   name: '9. Compton Scattering',
-  blurb: 'X-ray photon scattering off a stationary electron: fractional wavelength shift, ' +
-         'electron recoil angle and electron recoil speed, each against the photon ' +
-         'scattering angle θ.',
+  blurb: 'A series of graphs showing how photons and stationary electrons interact when they collide, showing the wavelength shift, electron velocity and the direction of the electron’s motion depending on which angle θ the photon is scattered by.',
 
   async render(page) {
     let energyKeV = 1000;

@@ -3,9 +3,7 @@
 PROJECTS.push({
   id: 'photoelectric',
   name: '4. Photoelectric Effect',
-  blurb: 'Stopping voltage against photon frequency for a chosen metal. The solid line is ' +
-         'the physical stopping voltage and the dotted part its extrapolation below the ' +
-         'cutoff frequency. The coloured verticals mark four visible-light frequencies.',
+  blurb: 'The stopping voltage V against light intensity for different metals. The solid line represents the real stopping voltages, whereas the dotted line is its extrapolation below the cutoff frequency. The four coloured lines represent the region of visible light.',
 
   async render(page) {
     const metals = await pyCall('photoelectric.web_metals');
