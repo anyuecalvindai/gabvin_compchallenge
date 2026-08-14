@@ -79,7 +79,12 @@ PROJECTS.push({
 
     let running = true;
     let alive = true;
-    let gen = 0;    // a re-init invalidates any frame still in flight
+    let gen = 0;       // a re-init invalidates any frame still in flight
+    let simTime = 0;   // simulated time, seconds — not wall clock
+
+    // tabular-nums keeps the digits from jittering as the clock runs
+    const clock = el('span', { class: 'val' });
+    const showClock = () => { clock.textContent = 't = ' + (simTime * 1e9).toFixed(2) + ' ns'; };
 
     async function loop() {
       while (alive) {
@@ -90,6 +95,8 @@ PROJECTS.push({
             bath = frame.bath;
             trail.push(frame.tracer);
             if (trail.length > 6000) trail.shift();
+            simTime += STEPS_PER_FRAME * setup.dt;
+            showClock();
             draw();
           }
         }
@@ -113,6 +120,8 @@ PROJECTS.push({
         setup = s;
         bath = s.bath;
         trail = [s.tracer];
+        simTime = 0;      // fresh run, fresh clock
+        showClock();
         note.textContent = noteText();
         draw();
       } catch (err) {
@@ -172,9 +181,13 @@ PROJECTS.push({
     page.append(el('div', { class: 'controls' },
                   playBtn, saveBtn, randBtn, resetBtn,
                   ...sliders.map(s => s.root), note),
-                el('div', { class: 'card' }, canvas));
+                // .canvas-row is the existing flex helper used by diffraction and
+                // orbitals; it puts the clock beside the box without new CSS
+                el('div', { class: 'card' },
+                  el('div', { class: 'canvas-row' }, canvas, clock)));
 
     note.textContent = noteText();
+    showClock();
     draw();
     loop();
 

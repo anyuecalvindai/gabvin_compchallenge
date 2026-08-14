@@ -57,13 +57,13 @@ def init():
     vel = np.empty((n, 2)) #n rows for n particles, each row contains vx and vy
     vel[0] = rng.normal(0.0, np.sqrt(kB * T / M_trac), 2)  #tracer velocity    #syntax: rng.normal(mean, std, size of output)
     vel[1:] = rng.normal(0.0, np.sqrt(kB * T / m_bath), (n_bath, 2)) #1: - 1 onwards. bath particle velocities.
-    vel -= (mass[:, None] * vel).sum(0) / mass.sum()  # zero total MOMENTUM
+    vel -= (mass[:, None] * vel).sum(0) / mass.sum()  # calculate centre of mass velocity and subtract from all velocities, such that we are in the zero momentum frame at initialisation, so gas particles don't all drift apart immediately.
 
 
 # ---------------- physics ----------------
 def step():
     global pos  # needed: `pos +=` is an assignment, so Python would make it local
-    pos += vel * dt
+    pos += vel * dt #moves every particle in a straight line at constant velocity per step
 
     # walls: reflect, using abs() so a disc still overlapping can't double-flip
     lo = pos - radius[:, None] < 0.0
@@ -123,6 +123,7 @@ def web_setup(n_bath_=n_bath, m_bath_=m_bath, r_bath_=r_bath,
     return {
         "L": L,
         "T": T,
+        "dt": dt,          # so the UI can turn frames into simulated time
         "n_bath": n_bath,
         "m_bath": m_bath,
         "M_trac": M_trac,
