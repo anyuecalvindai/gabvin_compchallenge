@@ -3,8 +3,7 @@
 PROJECTS.push({
   id: 'randomwalk',
   name: '1. Random Walk',
-  blurb: '2D random walks with fixed step length and uniformly random direction, generated ' +
-         'by numpy. Regenerate to draw a new set; the view auto-scales to fit every path.',
+  blurb: ' A 2D plot of random walks generated using a constant step length and randomising the direction (angle) of the next step.',
 
   async render(page) {
     const SIZE = 560;

@@ -3,9 +3,7 @@
 PROJECTS.push({
   id: 'bohr',
   name: '5. Bohr Model — Spectral Series',
-  blurb: 'Photon energies and wavelengths for hydrogen transitions n → n_low (n up to 30), ' +
-         'computed with the reduced-mass Rydberg energy. Hover over a point for the ' +
-         'transition details.',
+  blurb: 'A graph of the hydrogen emission series, calculated for hydrogen transitions up until n=30 using the Bohr model. Hovering over the plotted points shows the series name, the transition, the photon wavelength, and the photon energy.',
 
   async render(page) {
     // set explicitly rather than left to plotly's colorway: each series now has two

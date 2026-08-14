@@ -4,7 +4,7 @@
 PROJECTS.push({
   id: 'brownian',
   name: '2. Brownian Motion',
-  blurb: ' A 2D animation of a large tracer particle, initialised at the centre of the grid, with smaller "bath" particles initialised at randomised positions on a square grid, clear of the tracer. Collisions with walls reverse the component perpendicular to the wall only. Collisions between particles are elastic, conserved to pythons floating point precision over 5000 steps. Initial bath particle velocity components are sampled from Boltzmann distributions depending on the temperature and particle masses that you can set manually. Time step = 1 picosecond, box width = 1 micrometre. There are 10 timesteps per animation frame. The radii of the particles are inflated compared to actual gas particles in the context of the box size, so that the collisions can actually be seen.',
+  blurb: 'Brownian Motion: A 2D animation of a large tracer particle, initialised at the centre of the grid, with smaller "bath" particles initialised at randomised positions on a square grid, clear of the tracer. Collisions with walls reverse the component perpendicular to the wall only. Collisions between particles are elastic, conserved to pythons floating point precision over 5000 steps. Initial bath particle velocity components are sampled from Boltzmann distributions depending on the temperature and particle masses that you can set manually. Time step = 1 picosecond, box width = 1 micrometre. There are 10 timesteps per animation frame. The radii of the particles are inflated compared to actual gas particles in the context of the box size, so that the collisions can actually be seen. You can click save to save the last walk, and automatically start a new one. ',
 
   async render(page) {
     const SIZE = 520;
