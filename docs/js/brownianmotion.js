@@ -4,11 +4,7 @@
 PROJECTS.push({
   id: 'brownian',
   name: '2. Brownian Motion',
-  blurb: '2D hard-disc gas with a tracer particle (red), simulated by the numpy code from ' +
-         'the challenge. Bath particles and the tracer collide elastically; momentum ' +
-         'transfer from the bath kicks the tracer along a random walk, traced in red. ' +
-         'Save walk keeps the current path on the canvas in another colour and starts ' +
-         'a fresh one, so runs can be compared side by side.',
+  blurb: ' A 2D animation of a large tracer particle, initialised at the centre of the grid, with smaller "bath" particles initialised at randomised positions on a square grid, clear of the tracer. Collisions with walls reverse the component perpendicular to the wall only. Collisions between particles are elastic, conserved to pythons floating point precision over 5000 steps. Initial bath particle velocity components are sampled from Boltzmann distributions depending on the temperature and particle masses that you can set manually. Time step = 1 picosecond, box width = 1 micrometre. There are 10 timesteps per animation frame. The radii of the particles are inflated compared to actual gas particles in the context of the box size, so that the collisions can actually be seen.',
 
   async render(page) {
     const SIZE = 520;

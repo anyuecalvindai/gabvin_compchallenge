@@ -6,10 +6,7 @@
 PROJECTS.push({
   id: 'orbitals',
   name: '10. Hydrogen Orbitals',
-  blurb: 'Hydrogen eigenstates from the analytic wavefunction (reduced mass, real orbital ' +
-         'combinations). Pick n, l, m; view a 2D slice of |ψ|² through the nucleus, or the ' +
-         '3D lobes coloured by the sign of ψ — red positive, blue negative. The cutoff ' +
-         'slider sets the density below which nothing is drawn.',
+  blurb: 'Hydrogen orbitals  from the analytic wavefunction. You can input  n, l, m; view a 2D slice of |ψ|² through the nucleus, or the 3D lobes coloured by the sign of ψ — red positive, blue negative. The cutoff slider sets the density below which nothing is drawn.',
 
   async render(page) {
     const RES = 96;               // 3D grid points per axis; cost grows as RES^3

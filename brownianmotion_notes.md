@@ -351,49 +351,212 @@ correct for a gas in a container, but it is worth being able to say so rather th
 
 ## 6. Does it reproduce real gas physics?
 
-### 6.1 Collision rate against kinetic theory
+This is the "have I actually built a gas, or just some bouncing dots?" test. Section 5 showed the
+code is internally consistent — energy does not leak. That is necessary but not sufficient: a
+simulation can conserve energy perfectly and still get the physics wrong. This section checks the
+behaviour against theory worked out independently, on paper.
 
-Simple 2D kinetic theory: a disc sweeps out a strip of width `d = 2r` at the mean relative speed, so
-the collision rate per particle is `n_A · d · ⟨v_rel⟩`, with `⟨v_rel⟩ = √2 ⟨v⟩` and the 2D mean speed
-`⟨v⟩ = √(πkT/2m)`.
+### 6.1 How often should particles collide?
 
-At the defaults this predicts 2.50e11 collisions per second. **Measured: 2.67e11** — 6.7% higher.
+The plan: predict the number of collisions per second using nothing but pen-and-paper physics, then
+count the collisions the code actually performs, and compare. There is no adjustable knob — if they
+agree, the collision machinery is genuinely right.
 
-That gap is not an error. Dilute-gas theory assumes particles are points as far as *finding* each
-other is concerned. At finite density, discs are excluded from each other's volume, which crowds
-them together and raises the collision rate. The correction is the pair correlation function at
-contact, and for 2D hard discs Henderson's expression gives
+#### Step 1: replace two discs with a point and one bigger disc
+
+Two discs, each of radius `r`, touch when their centres are `2r` apart.
+
+Nothing about that changes if you shrink one disc down to a point and simultaneously grow the other
+from `r` to `2r`. The centres still meet at exactly `2r`. This is a standard trick and it makes the
+next step much easier to picture: instead of two moving objects of finite size, you have a point
+travelling towards a single target of radius `2r`.
+
+#### Step 2: how wide is the target?
+
+Picture the point travelling in a straight line, and a target disc of radius `2r` sitting somewhere
+nearby. The point hits the disc if it passes within `2r` of the disc's centre — and that counts on
+*either* side, left or right.
+
+So the target blocks a band of width `2r + 2r = 4r`.
+
+This width is called the **collision cross-section**. In 3D it would be an area (which is why it is
+called a cross-*section*); in 2D it is just a length. For our discs it is `4r`.
+
+#### Step 3: sweep out a strip
+
+Now let the point travel for a time `t` at speed `v`. It covers a distance `v·t`, and it will hit
+anything whose centre lies within that `4r`-wide band along its path.
+
+So the point sweeps out a strip of **area** `4r × v·t`.
+
+If there are `n` target centres per unit area, the number of things in that strip is
 
 ```
-g(σ) = (1 − 7η/16) / (1 − η)²
+number of collisions in time t  =  n × 4r × v × t
 ```
 
-where `η` is the packing fraction. Testing whether the measured enhancement follows it:
+and dividing by `t`, the collision rate for one particle is
 
-| n_bath | r_bath | packing η | measured / dilute | Enskog g(σ) | difference |
-|---|---|---|---|---|---|
-| 60 | 8 nm | 0.012 | 0.923 | 1.019 | −9.5% |
-| 180 | 8 nm | 0.036 | 1.064 | 1.059 | +0.4% |
-| 300 | 8 nm | 0.060 | 1.084 | 1.103 | −1.6% |
-| 180 | 12 nm | 0.081 | 1.174 | 1.143 | +2.7% |
-| 300 | 12 nm | 0.136 | 1.271 | 1.259 | +1.0% |
+```
+z = n × 4r × v
+```
 
-Across a factor of 11 in density the enhancement tracks the theory to within a few percent. The
-60-particle row is the outlier and is also the noisiest — fewest particles, fewest collisions counted.
+That is the whole derivation. Denser gas → more collisions. Bigger discs → more collisions. Faster
+particles → more collisions. All three appear exactly once, linearly.
 
-**This is the strongest result in the whole simulation.** It shows the code reproduces not just the
-textbook dilute-gas result but the dense-gas correction on top of it, which is not something you can
-get by accident.
+#### Step 4: whose speed?
 
-Mean free path at the defaults: 246 nm, against a 1000 nm box. So a particle crosses only about a
-quarter of the box between collisions — dense enough to behave like a gas rather than a set of
-independent projectiles.
+`v` here must be the **relative** speed between the two particles, not the speed of either one. Two
+particles flying side by side at 500 m/s never collide; two flying head-on at 500 m/s each collide
+hard. What matters is how fast they approach each other.
+
+For two particles drawn from the same distribution, the relative speed averages out to
+
+```
+⟨v_rel⟩ = √2 × ⟨v⟩
+```
+
+The `√2` is the same one that appears when you add two independent random quantities: variances add,
+so the standard deviations combine as `√(a² + b²)`, and with `a = b` that gives `√2 a`.
+
+#### Step 5: what is the average speed?
+
+Section 3.3 established that each velocity *component* is Gaussian with standard deviation `√(kT/m)`.
+The **speed** is the length of that 2D vector, and its average works out to
+
+```
+⟨v⟩ = √(πkT / 2m)
+```
+
+At the default settings (T = 1000 K, m = 28 u) that is **683 m/s** — about twice the speed of sound
+in air, which is the right ballpark for a hot light gas.
+
+#### Step 6: don't double-count
+
+`z` is the rate for *one* particle. Multiply by `N` particles and you have counted every collision
+twice, once from each participant's point of view. So the total rate of collision *events* is
+
+```
+total rate = N × z / 2
+```
+
+#### The comparison
+
+Putting the defaults in: **predicted 5.13 × 10¹¹ collisions per second.**
+
+Counting the collisions the code actually performs — that is, the number of times the impulse code
+runs — gives **5.50 × 10¹¹ per second**. About 7% more than predicted.
+
+#### Why the measurement is higher, and why that is correct
+
+The derivation above quietly assumed the target centres are scattered completely at random, with no
+regard for each other. But hard discs cannot overlap, so each disc carves out a region around itself
+that other centres are forbidden to enter.
+
+The effect of that is subtle but real: because centres are pushed out of the forbidden regions, they
+end up slightly *more* likely to be found just at contact distance than pure randomness would
+suggest. Slightly more neighbours right on your doorstep means slightly more collisions.
+
+The size of the effect depends on how crowded the box is, measured by the **packing fraction** `η` —
+the fraction of the box area actually covered by discs. For 2D hard discs the standard correction
+(Henderson's formula) is
+
+```
+g = (1 − 7η/16) / (1 − η)²
+```
+
+and the true collision rate should be the dilute prediction multiplied by `g`. Note that when `η → 0`
+this gives `g → 1`: an empty box needs no correction, and the simple derivation should become exact.
+
+**That limit is the sharpest test available**, because it does not depend on trusting Henderson's
+formula at all. If the simple theory is set up correctly, a very dilute simulation must agree with it
+almost perfectly.
+
+Measured across a 34× range of packing fraction:
+
+| n_bath | r_bath | packing η | measured rate | dilute prediction | ratio | Henderson g | ratio / g |
+|---|---|---|---|---|---|---|---|
+| 20 | 8 nm | 0.0041 | 6.38e9 | 6.34e9 | 1.008 | 1.006 | **1.001** |
+| 60 | 8 nm | 0.0124 | 5.49e10 | 5.70e10 | 0.962 | 1.020 | 0.944 |
+| 180 | 8 nm | 0.0371 | 5.50e11 | 5.13e11 | 1.072 | 1.061 | 1.010 |
+| 300 | 8 nm | 0.0618 | 1.55e12 | 1.43e12 | 1.088 | 1.105 | 0.984 |
+| 180 | 12 nm | 0.0837 | 9.05e11 | 7.72e11 | 1.174 | 1.147 | 1.023 |
+| 300 | 12 nm | 0.1394 | 2.68e12 | 2.14e12 | 1.251 | 1.268 | 0.986 |
+
+Two things to read off this:
+
+1. **The dilute limit works.** At the emptiest setting the measured rate matches the pen-and-paper
+   prediction to 0.8%, and once the (tiny) crowding correction is applied, to 0.1%. The kinetic
+   theory above is set up correctly and the simulation obeys it.
+
+2. **The crowding correction works too.** As the box fills up, the measured rate rises steadily above
+   the dilute prediction — by 25% at the densest setting — and it tracks Henderson's formula the
+   whole way. Five of the six rows agree to within 2.3%.
+
+The 60-particle row is the one outlier at −5.6%. It has both few particles and few collisions counted,
+so it is the noisiest point; it is honest to leave it in the table rather than quietly drop it.
+
+This is a strong result. Reproducing the dilute-gas law alone would show the collision detection
+works; reproducing the density-dependent correction on top of it shows the *statistics* of the
+particle arrangement are right too, which is much harder to get by accident.
+
+#### Mean free path
+
+A related number, useful for intuition: the average distance a particle travels between collisions.
+It is just the mean speed divided by the per-particle collision rate.
+
+At the defaults that gives **112 nm**, in a box 1000 nm across. So a particle typically collides about
+nine times while crossing the box. That is the right regime — dense enough to behave like a gas rather
+than like independent projectiles bouncing between walls, but not so dense that it behaves like a
+liquid.
 
 ### 6.2 Does the tracer actually diffuse?
 
-For true diffusion the mean squared displacement should grow linearly in time, `⟨Δr²⟩ = 4Dt` in 2D.
-For pure ballistic (collisionless) motion it grows as `t²`. Fitting the exponent over 6 runs of
-15 000 steps:
+The whole point of the page is that the tracer performs a random walk. There is a specific, testable
+signature of that.
+
+#### What to measure
+
+Track how far the tracer has moved from its starting point, and square it: `Δr² = Δx² + Δy²`. Squaring
+matters — the tracer is equally likely to go left or right, so the average of `Δx` itself is zero and
+tells you nothing. The average of the *square* is not zero, and it grows with time. Averaging over
+several runs gives the **mean squared displacement** (MSD).
+
+#### What theory predicts
+
+Two very different behaviours are possible, and they are easy to tell apart:
+
+**No collisions at all (ballistic).** The tracer moves in a straight line at constant speed `v`, so
+after time `t` it has gone a distance `v·t`, and
+
+```
+⟨Δr²⟩ = v²t²      — grows as t²
+```
+
+**Many collisions (diffusive).** Think of a coin-flip walk: each step goes randomly left or right. The
+key fact about random walks is that the *squared* distance adds up, while the distance itself largely
+cancels. After `N` random steps of length `ℓ`, the mean squared displacement is `N·ℓ²`. Since the
+number of steps grows in proportion to time,
+
+```
+⟨Δr²⟩ = 4Dt       — grows as t
+```
+
+where `D` is the diffusion coefficient and the 4 is a 2D geometry factor.
+
+So the exponent tells you which regime you are in: **2 means ballistic, 1 means diffusive.** A real
+Brownian particle should start ballistic (before its first collision) and cross over to diffusive
+once it has been hit many times.
+
+#### How to extract the exponent
+
+If `⟨Δr²⟩ ∝ t^p`, then taking logarithms of both sides gives `log⟨Δr²⟩ = p·log t + constant`. So
+plotting log-MSD against log-time gives a straight line whose **gradient is `p`**. Fitting a straight
+line to that log-log plot over a chosen time window recovers the exponent.
+
+#### The result
+
+Averaged over 6 runs of 15 000 steps each:
 
 | time window | fitted exponent |
 |---|---|
@@ -401,20 +564,28 @@ For pure ballistic (collisionless) motion it grows as `t²`. Fitting the exponen
 | middle | 1.62 |
 | late | 1.10 |
 
-So the tracer starts out nearly ballistic and crosses over towards diffusive, reaching 1.10 by the
-late window — close to the diffusive value of 1, but not fully converged.
+The tracer starts close to ballistic (1.74, heading towards 2) and moves steadily towards diffusive,
+reaching 1.10 by the late window. The crossover is clearly there and in the right direction.
 
-**Be honest about this one.** The run does not cleanly demonstrate long-time diffusion, and there is
-a good reason: by the end of these runs the tracer's rms displacement is 339 nm in a 1000 nm box. It
-has explored a large fraction of the container, so the walls are confining it and the MSD is starting
-to saturate. There is only a narrow window between "not yet enough collisions" and "already hitting
-the walls".
+#### Be honest about this one
 
-The late-time slope gives D ≈ 2.4e-6 m²/s, but treat that as an order-of-magnitude estimate, not a
-measurement.
+It does **not** cleanly reach 1.0, and you should be able to say why rather than being caught out.
 
-If you wanted to show clean diffusion you would need a bigger box relative to the tracer, or a
-heavier tracer so it moves less far. Both cost simulation time.
+By the end of these runs the tracer's rms displacement is 339 nm — in a box only 1000 nm wide. It has
+wandered across a large fraction of the container, so the walls have started to hem it in. Once a
+particle can feel the walls, its MSD stops growing and flattens off entirely, which drags the fitted
+exponent *below* 1.
+
+So there is only a narrow window in between: early on the tracer has not yet been hit enough times to
+be diffusive, and by the time it has, it is already bumping into the walls. The value 1.10 sits in
+that squeeze.
+
+The late-time gradient gives a diffusion coefficient of roughly `D ≈ 2.4 × 10⁻⁶ m² s⁻¹`, but treat
+that as an order of magnitude rather than a measurement, for the same reason.
+
+To show clean diffusion you would need a box much larger relative to the tracer, or a heavier tracer
+that moves less far in the same time. Both mean longer runs — and the cost of a run grows as the
+square of the particle count (§7.3), so a bigger box at the same density gets expensive quickly.
 
 ---
 
@@ -505,8 +676,8 @@ Things that are defensible but that you should be able to explain if asked:
 | bath σ per velocity component | 545 m/s |
 | bath mean speed (2D) | 683 m/s |
 | tracer σ per component | 172 m/s |
-| packing fraction | 5.6% |
-| mean free path | 246 nm |
-| collision rate (bath–bath) | 2.67e11 s⁻¹ |
+| packing fraction | 3.7% bath discs (5.6% including the tracer) |
+| mean free path | 112 nm (~9 collisions per box crossing) |
+| collision rate (bath–bath) | 5.50e11 s⁻¹ (dilute theory predicts 5.13e11) |
 | timestep | 1 ps; 10 ps of simulated time per animation frame |
 | energy drift | ≤ 3e-16 over 5000 steps |
