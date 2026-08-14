@@ -2,7 +2,7 @@
 
 PROJECTS.push({
   id: 'einstein',
-  name: 'Einstein Heat Capacity',
+  name: '3b. Einstein Heat Capacity',
   blurb: 'Einstein model of the molar heat capacity of solids for seven elements, each with ' +
          'its own Einstein frequency. Every curve approaches the Dulong-Petit limit 3R ' +
          '(dashed line) at high temperature.',

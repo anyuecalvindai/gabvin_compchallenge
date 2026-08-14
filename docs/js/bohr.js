@@ -2,7 +2,7 @@
 
 PROJECTS.push({
   id: 'bohr',
-  name: 'Bohr Model — Spectral Series',
+  name: '5. Bohr Model — Spectral Series',
   blurb: 'Photon energies and wavelengths for hydrogen transitions n → n_low (n up to 30), ' +
          'computed with the reduced-mass Rydberg energy. Hover over a point for the ' +
          'transition details.',

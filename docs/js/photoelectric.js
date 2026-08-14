@@ -2,7 +2,7 @@
 
 PROJECTS.push({
   id: 'photoelectric',
-  name: 'Photoelectric Effect',
+  name: '4. Photoelectric Effect',
   blurb: 'Stopping voltage against photon frequency for a chosen metal. The solid line is ' +
          'the physical stopping voltage and the dotted part its extrapolation below the ' +
          'cutoff frequency. The coloured verticals mark four visible-light frequencies.',

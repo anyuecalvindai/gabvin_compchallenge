@@ -2,7 +2,7 @@
 
 PROJECTS.push({
   id: 'randomwalk',
-  name: 'Random Walk',
+  name: '1. Random Walk',
   blurb: '2D random walks with fixed step length and uniformly random direction, generated ' +
          'by numpy. Regenerate to draw a new set; the view auto-scales to fit every path.',
 

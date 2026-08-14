@@ -2,7 +2,7 @@
 
 PROJECTS.push({
   id: 'diffraction',
-  name: 'Electron Diffraction',
+  name: '6. Electron Diffraction',
   blurb: 'Bragg diffraction rings from a polycrystalline graphite target (plane spacings ' +
          'd1 = 0.123 nm, d2 = 0.213 nm) on a screen 65 mm away. Toggle between the ' +
          'phosphor-screen simulation and an annotated graph view. Below: the linearisation ' +

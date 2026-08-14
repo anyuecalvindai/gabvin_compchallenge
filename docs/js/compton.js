@@ -2,7 +2,7 @@
 
 PROJECTS.push({
   id: 'compton',
-  name: 'Compton Scattering',
+  name: '9. Compton Scattering',
   blurb: 'X-ray photon scattering off a stationary electron: fractional wavelength shift, ' +
          'electron recoil angle and electron recoil speed, each against the photon ' +
          'scattering angle θ.',

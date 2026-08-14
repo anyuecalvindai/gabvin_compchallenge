@@ -2,7 +2,7 @@
 
 PROJECTS.push({
   id: 'blackbody',
-  name: 'Black Body Radiation',
+  name: '3a. Black Body Radiation',
   blurb: 'Planck curve for a black body. Slide the temperature to watch the peak shift ' +
          '(Wien\'s law) and the curve change colour to match. The 5778 K solar spectrum ' +
          'is plotted for reference, and the y-axis rescales to the adjustable curve.',

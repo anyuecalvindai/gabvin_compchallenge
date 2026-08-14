@@ -5,7 +5,7 @@
 
 PROJECTS.push({
   id: 'orbitals',
-  name: 'Hydrogen Orbitals',
+  name: '10. Hydrogen Orbitals',
   blurb: 'Hydrogen eigenstates from the analytic wavefunction (reduced mass, real orbital ' +
          'combinations). Pick n, l, m; view a 2D slice of |ψ|² through the nucleus, or the ' +
          '3D lobes coloured by the sign of ψ — red positive, blue negative. The cutoff ' +

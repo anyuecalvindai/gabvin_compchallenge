@@ -3,7 +3,7 @@
 
 PROJECTS.push({
   id: 'crypto',
-  name: 'Quantum Cryptography',
+  name: '8. Quantum Cryptography',
   blurb: 'Two polarisation detectors at angles φ and θ measuring an entangled photon pair. ' +
          'Compares the mismatch probability from a classical hidden-variable model with ' +
          'the quantum mechanical prediction sin²(φ−θ).',

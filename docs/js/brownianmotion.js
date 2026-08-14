@@ -3,7 +3,7 @@
 
 PROJECTS.push({
   id: 'brownian',
-  name: 'Brownian Motion',
+  name: '2. Brownian Motion',
   blurb: '2D hard-disc gas with a tracer particle (red), simulated by the numpy code from ' +
          'the challenge. Bath particles and the tracer collide elastically; momentum ' +
          'transfer from the bath kicks the tracer along a random walk, traced in red. ' +
@@ -19,12 +19,13 @@ PROJECTS.push({
     const SAVED_COLOURS = ['#2ca02c', '#9467bd', '#ff7f0e', '#8c564b', '#e377c2'];
 
     // slider state, in display units; params() converts to SI for python
-    let nBath = 180, mBathU = 28, rBathNm = 8, tracerExp = 1, rTracNm = 80;
+    let nBath = 180, mBathU = 28, rBathNm = 8, tracerExp = 1, rTracNm = 80, temp = 1000;
     let seed = 2;
 
     const params = () => {
       const mBath = mBathU * U;
-      return [nBath, mBath, rBathNm * 1e-9, (10 ** tracerExp) * mBath, rTracNm * 1e-9, seed];
+      return [nBath, mBath, rBathNm * 1e-9, (10 ** tracerExp) * mBath, rTracNm * 1e-9,
+              temp, seed];
     };
     const newSeed = () => Math.floor(Math.random() * 1e6);
 
@@ -158,7 +159,11 @@ PROJECTS.push({
       slider({ label: 'Tracer mass', min: -2, max: 2, step: 0.05, value: tracerExp,
         fmt: v => (10 ** v).toPrecision(2) + '× bath', oninput: v => { tracerExp = v; } }),
       slider({ label: 'Tracer radius', min: 20, max: 200, step: 5, value: rTracNm,
-        fmt: v => v + ' nm', oninput: v => { rTracNm = v; } })
+        fmt: v => v + ' nm', oninput: v => { rTracNm = v; } }),
+      // capped at 3000 K: speeds go as sqrt(T) against a fixed dt, and above that
+      // the fixed step starts to miss collisions at the small-radius end
+      slider({ label: 'Temperature', min: 100, max: 3000, step: 50, value: temp,
+        fmt: v => v + ' K', oninput: v => { temp = v; } })
     ];
     // readouts follow the drag, but rebuilding the whole gas is far too heavy
     // to do per pixel, so the re-init waits for release

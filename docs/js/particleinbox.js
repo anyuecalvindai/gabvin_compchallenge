@@ -2,7 +2,7 @@
 
 PROJECTS.push({
   id: 'box',
-  name: 'Particle in a 1D Box',
+  name: '7. Particle in a 1D Box',
   blurb: 'Energy eigenstates of an infinite square well: the wavefunction ' +
          'ψₙ(x) = √(2/L)·sin(nπx/L) and the probability density |ψ|², with the box ' +
          'length L in Bohr radii. The energy Eₙ = ℏ²π²n²/2mL² is shown for the current state.',
