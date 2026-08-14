@@ -1,7 +1,6 @@
 # BPhO Computational Challenge — simulations site
 
-Interactive site for the computational challenge projects. The physics runs on
-real Python (numpy) in the browser via Pyodide: the `py/` modules are the same
+Interactive site for the computational challenge projects. The physics runs on Python (numpy) in the browser via Pyodide: the `py/` modules are the same
 functions as the desktop scripts in the main repo, and the JavaScript in `js/`
 only handles controls, canvases and Plotly charts.
 
