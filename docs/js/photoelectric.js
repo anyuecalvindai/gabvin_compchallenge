@@ -34,14 +34,31 @@ PROJECTS.push({
       const belowCutoff = d.V.map(v => v <= 0 ? v : null);
       const aboveCutoff = d.V.map(v => v > 0 ? v : null);
 
+      // per-point extras for the hover box; full length so it lines up with the
+      // null-masked y arrays
+      const extra = d.frequencies.map((_, i) => [d.wavelength_nm[i], d.photon_eV[i]]);
+
+      const common = 'f = %{x:.4~s}Hz<br>λ = %{customdata[0]} nm<br>' +
+                     'photon energy = %{customdata[1]} eV<br>';
+
       Plotly.react(plotDiv, [
         { x: d.frequencies, y: belowCutoff, name: 'Extrapolated stopping voltage',
-          mode: 'lines', line: { color: '#1f77b4', dash: 'dot' } },
+          mode: 'lines', line: { color: '#1f77b4', dash: 'dot' },
+          customdata: extra,
+          hovertemplate: common +
+            'below cutoff: no emission<br>extrapolated V = %{y:.3f} V<extra></extra>' },
         { x: d.frequencies, y: aboveCutoff, name: 'Stopping voltage',
-          mode: 'lines', line: { color: '#1f77b4' } },
+          mode: 'lines', line: { color: '#1f77b4' },
+          customdata: extra,
+          hovertemplate: common +
+            'stopping voltage = %{y:.3f} V<br>max KE = %{y:.3f} eV<extra></extra>' },
         { x: [d.cutoff, d.cutoff], y: [yMin, yMax], name: `Cutoff frequency ${d.cutoff.toPrecision(3)} Hz`,
-          mode: 'lines', line: { color: '#1f77b4', dash: 'dot', width: 1.5 } }
+          mode: 'lines', line: { color: '#1f77b4', dash: 'dot', width: 1.5 },
+          hovertemplate: `cutoff frequency = ${d.cutoff.toPrecision(4)} Hz<br>` +
+            `threshold λ = ${d.cutoff_nm.toFixed(1)} nm<br>` +
+            `W = ${d.W} eV<extra></extra>` }
       ], baseLayout({
+        hovermode: 'closest',
         height: 460,
         title: { text: `Photoelectric effect for ${metal}:  W = ${d.W} eV` },
         xaxis: { title: { text: 'Frequency / Hz' }, range: [0, 2.5e15] },

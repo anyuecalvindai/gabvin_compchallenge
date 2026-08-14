@@ -59,5 +59,10 @@ def web_curve(metal):
         "frequencies": frequencies.tolist(),
         "V": stopVolts.tolist(),
         "cutoff": cutoff,
+        "cutoff_nm": c / cutoff * 1e9,
         "W": metals[metal],
+        # for the hover readout only; None at f = 0 because lambda diverges there
+        # and JSON has no infinity
+        "wavelength_nm": [None if f == 0 else round(c / f * 1e9, 2) for f in frequencies],
+        "photon_eV": [round(h * f / e, 4) for f in frequencies],
     }
