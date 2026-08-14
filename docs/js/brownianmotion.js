@@ -6,34 +6,61 @@ PROJECTS.push({
   name: 'Brownian Motion',
   blurb: '2D hard-disc gas with a tracer particle (red), simulated by the numpy code from ' +
          'the challenge. Bath particles and the tracer collide elastically; momentum ' +
-         'transfer from the bath kicks the tracer along a random walk, traced in red.',
+         'transfer from the bath kicks the tracer along a random walk, traced in red. ' +
+         'Save walk keeps the current path on the canvas in another colour and starts ' +
+         'a fresh one, so runs can be compared side by side.',
 
   async render(page) {
     const SIZE = 520;
     const STEPS_PER_FRAME = 10;   // matches spf in the python module
+    const U = 1.66053907e-27;     // atomic mass unit, kg
+
+    // saved walks, drawn under the live one. blue is the bath colour, so it is out
+    const SAVED_COLOURS = ['#2ca02c', '#9467bd', '#ff7f0e', '#8c564b', '#e377c2'];
+
+    // slider state, in display units; params() converts to SI for python
+    let nBath = 180, mBathU = 28, rBathNm = 8, tracerExp = 1, rTracNm = 80;
+    let seed = 2;
+
+    const params = () => {
+      const mBath = mBathU * U;
+      return [nBath, mBath, rBathNm * 1e-9, (10 ** tracerExp) * mBath, rTracNm * 1e-9, seed];
+    };
+    const newSeed = () => Math.floor(Math.random() * 1e6);
 
     const canvas = el('canvas', { width: SIZE, height: SIZE,
       style: { background: '#fff', border: '1px solid #e4e4e7' } });
     const ctx = canvas.getContext('2d');
 
-    let setup = await pyCall('brownianmotion.web_setup');
+    // saved walks never change once saved, so they are stroked once into an
+    // offscreen canvas and blitted per frame rather than re-stroked every frame
+    const savedCanvas = el('canvas', { width: SIZE, height: SIZE });
+    const savedCtx = savedCanvas.getContext('2d');
+    let savedCount = 0;
+
+    let setup = await pyCall('brownianmotion.web_setup', ...params());
     const SCALE = SIZE / setup.L;
     let bath = setup.bath;
     let trail = [setup.tracer];
+
+    function strokeTrail(c, pts, colour) {
+      if (pts.length < 2) return;
+      c.strokeStyle = colour;
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(pts[0][0] * SCALE, SIZE - pts[0][1] * SCALE);
+      for (let i = 1; i < pts.length; i++) {
+        c.lineTo(pts[i][0] * SCALE, SIZE - pts[i][1] * SCALE);
+      }
+      c.stroke();
+    }
 
     function draw() {
       ctx.fillStyle = '#fff';
       ctx.fillRect(0, 0, SIZE, SIZE);
 
-      // tracer trail
-      ctx.strokeStyle = 'rgba(214,39,40,0.6)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(trail[0][0] * SCALE, SIZE - trail[0][1] * SCALE);
-      for (let i = 1; i < trail.length; i++) {
-        ctx.lineTo(trail[i][0] * SCALE, SIZE - trail[i][1] * SCALE);
-      }
-      ctx.stroke();
+      ctx.drawImage(savedCanvas, 0, 0);
+      strokeTrail(ctx, trail, 'rgba(214,39,40,0.6)');
 
       ctx.fillStyle = 'rgba(31,119,180,0.7)';
       for (const p of bath) {
@@ -51,17 +78,46 @@ PROJECTS.push({
 
     let running = true;
     let alive = true;
+    let gen = 0;    // a re-init invalidates any frame still in flight
 
     async function loop() {
       while (alive) {
         if (running) {
+          const my = gen;
           const frame = await pyCall('brownianmotion.web_frame', STEPS_PER_FRAME);
-          bath = frame.bath;
-          trail.push(frame.tracer);
-          if (trail.length > 6000) trail.shift();
-          draw();
+          if (my === gen) {
+            bath = frame.bath;
+            trail.push(frame.tracer);
+            if (trail.length > 6000) trail.shift();
+            draw();
+          }
         }
         await new Promise(r => requestAnimationFrame(r));
+      }
+    }
+
+    const note = el('span', { class: 'note' });
+
+    function noteText() {
+      return `${setup.n_bath} bath particles at ${(setup.m_bath / U).toFixed(0)} u, ` +
+             `tracer mass ${(setup.M_trac / setup.m_bath).toPrecision(2)}× bath, ` +
+             `T = ${setup.T} K, box ${setup.L * 1e6} μm (radii inflated)`;
+    }
+
+    async function reinit() {
+      const my = ++gen;
+      try {
+        const s = await pyCall('brownianmotion.web_setup', ...params());
+        if (my !== gen) return;
+        setup = s;
+        bath = s.bath;
+        trail = [s.tracer];
+        note.textContent = noteText();
+        draw();
+      } catch (err) {
+        // a throw in a control handler would otherwise vanish into the console
+        note.textContent = 'setup failed: ' + err.message;
+        console.error(err);
       }
     }
 
@@ -70,19 +126,50 @@ PROJECTS.push({
       playBtn.textContent = running ? 'Pause' : 'Play';
     } }, 'Pause');
 
-    const resetBtn = el('button', { class: 'btn', onclick: async () => {
-      setup = await pyCall('brownianmotion.web_setup');
-      bath = setup.bath;
-      trail = [setup.tracer];
-      draw();
+    // saving without re-rolling the seed would replay the same walk straight on top
+    const saveBtn = el('button', { class: 'btn', onclick: () => {
+      savedCtx.globalAlpha = 0.45;
+      strokeTrail(savedCtx, trail, SAVED_COLOURS[savedCount % SAVED_COLOURS.length]);
+      savedCtx.globalAlpha = 1;
+      savedCount++;
+      seed = newSeed();
+      reinit();
+    } }, 'Save walk');
+
+    const randBtn = el('button', { class: 'btn', onclick: () => {
+      seed = newSeed();
+      reinit();
+    } }, 'Randomise bath');
+
+    const resetBtn = el('button', { class: 'btn', onclick: () => {
+      savedCtx.clearRect(0, 0, SIZE, SIZE);
+      savedCount = 0;
+      seed = 2;         // back to the reproducible default run
+      reinit();
     } }, 'Reset');
 
-    page.append(el('div', { class: 'controls' }, playBtn, resetBtn,
-                  el('span', { class: 'note' },
-                    `${setup.n_bath} bath particles (N₂-like, radius inflated), T = ${setup.T} K, ` +
-                    `box ${setup.L * 1e6} μm`)),
+    const sliders = [
+      slider({ label: 'Bath particles', min: 20, max: 400, step: 10, value: nBath,
+        fmt: v => String(v), oninput: v => { nBath = v; } }),
+      slider({ label: 'Bath mass', min: 8, max: 120, step: 1, value: mBathU,
+        fmt: v => v + ' u', oninput: v => { mBathU = v; } }),
+      slider({ label: 'Bath radius', min: 6, max: 16, step: 0.5, value: rBathNm,
+        fmt: v => v + ' nm', oninput: v => { rBathNm = v; } }),
+      slider({ label: 'Tracer mass', min: -2, max: 2, step: 0.05, value: tracerExp,
+        fmt: v => (10 ** v).toPrecision(2) + '× bath', oninput: v => { tracerExp = v; } }),
+      slider({ label: 'Tracer radius', min: 20, max: 200, step: 5, value: rTracNm,
+        fmt: v => v + ' nm', oninput: v => { rTracNm = v; } })
+    ];
+    // readouts follow the drag, but rebuilding the whole gas is far too heavy
+    // to do per pixel, so the re-init waits for release
+    for (const s of sliders) s.inp.addEventListener('change', () => reinit());
+
+    page.append(el('div', { class: 'controls' },
+                  playBtn, saveBtn, randBtn, resetBtn,
+                  ...sliders.map(s => s.root), note),
                 el('div', { class: 'card' }, canvas));
 
+    note.textContent = noteText();
     draw();
     loop();
 

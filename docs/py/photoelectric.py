@@ -45,6 +45,13 @@ def web_lights():
     return [red, yellow, green, blue]
 
 
+def web_yrange():
+    # one fixed frame for every metal: only the curve should move, not the axes
+    lo = min(stoppingVoltage(frequencies[0], m) for m in metals)
+    hi = max(stoppingVoltage(frequencies[-1], m) for m in metals)
+    return [lo - 0.5, hi + 0.5]
+
+
 def web_curve(metal):
     stopVolts = stoppingVoltage(frequencies, metal)
     cutoff = metals[metal] * e/h

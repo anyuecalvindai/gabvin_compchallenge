@@ -10,6 +10,8 @@ PROJECTS.push({
   async render(page) {
     const metals = await pyCall('photoelectric.web_metals');
     const lightFreqs = await pyCall('photoelectric.web_lights');
+    // fixed across every metal, so switching material moves the curve, not the frame
+    const [yMin, yMax] = await pyCall('photoelectric.web_yrange');
     const lightColours = ['#d62728', '#e6c700', '#2ca02c', '#1f77b4'];   // red yellow green blue
 
     let metal = metals[0];
@@ -31,8 +33,6 @@ PROJECTS.push({
 
       const belowCutoff = d.V.map(v => v <= 0 ? v : null);
       const aboveCutoff = d.V.map(v => v > 0 ? v : null);
-      const yMin = -d.W - 0.5;
-      const yMax = d.V[d.V.length - 1] + 0.5;
 
       Plotly.react(plotDiv, [
         { x: d.frequencies, y: belowCutoff, name: 'Extrapolated stopping voltage',

@@ -20,29 +20,36 @@ n_bath = 180
 m_bath = 4.65e-26  # N2 molecule, kg
 r_bath = 8.0e-9  # inflated ~50x over real N2 so collisions are frequent
 
-M_trac = 0.1 * m_bath
+M_trac = 10 * m_bath
 R_trac = 8.0e-8
 
 dt = 1.0e-12  # s
 spf = 10  # physics steps per animation frame
+seed = 2  # fixed by default so a run is reproducible; the web UI can re-roll it
 
 
 def init():
     global rng, n, mass, radius, pos, vel
 
-    rng = np.random.default_rng(2)
+    rng = np.random.default_rng(seed)
 
     # ---------------- state ----------------
     n = n_bath + 1  # index 0 is the tracer
     mass = np.concatenate(([M_trac], np.full(n_bath, m_bath)))
     radius = np.concatenate(([R_trac], np.full(n_bath, r_bath)))
 
-    # positions: tracer at centre, bath on a jittered lattice that clears it
+    # positions: tracer at centre, bath on a jittered lattice that clears it.
+    # grow the lattice until enough sites survive the tracer exclusion, otherwise
+    # a big tracer or a large n_bath silently leaves pos shorter than mass/radius
     k = int(np.ceil(np.sqrt(n_bath * 1.6)))
-    gx, gy = np.meshgrid(np.linspace(0.05 * L, 0.95 * L, k),
-                         np.linspace(0.05 * L, 0.95 * L, k))
-    cand = np.column_stack([gx.ravel(), gy.ravel()])
-    cand = cand[np.hypot(*(cand - L / 2).T) > R_trac + 2 * r_bath]
+    while True:
+        gx, gy = np.meshgrid(np.linspace(0.05 * L, 0.95 * L, k),
+                             np.linspace(0.05 * L, 0.95 * L, k))
+        cand = np.column_stack([gx.ravel(), gy.ravel()])
+        cand = cand[np.hypot(*(cand - L / 2).T) > R_trac + 2 * r_bath]
+        if len(cand) >= n_bath:
+            break
+        k += 2
     cand = rng.permutation(cand)[:n_bath]
 
     pos = np.vstack([[L / 2, L / 2], cand])
@@ -104,12 +111,21 @@ init()
 
 # ---- adapter for the web UI ----
 
-def web_setup():
+def web_setup(n_bath_=n_bath, m_bath_=m_bath, r_bath_=r_bath,
+              M_trac_=M_trac, R_trac_=R_trac, seed_=seed):
+    # defaults are bound at def time to the module values above, so a bare
+    # web_setup() still rebuilds the standard run
+    global n_bath, m_bath, r_bath, M_trac, R_trac, seed
+    n_bath, seed = int(n_bath_), int(seed_)   # range inputs arrive as JSON floats
+    m_bath, r_bath = float(m_bath_), float(r_bath_)
+    M_trac, R_trac = float(M_trac_), float(R_trac_)
     init()
     return {
         "L": L,
         "T": T,
         "n_bath": n_bath,
+        "m_bath": m_bath,
+        "M_trac": M_trac,
         "R_trac": R_trac,
         "r_bath": r_bath,
         "tracer": pos[0].tolist(),

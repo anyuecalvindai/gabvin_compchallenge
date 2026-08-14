@@ -10,7 +10,8 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Circle
 
 kB = 1.380649e-23
-rng = np.random.default_rng(2)
+seed = 2  # fixed so a run is reproducible
+rng = np.random.default_rng(seed)
 
 # ---------------- parameters ----------------
 L = 1.0e-6  # box side, m
@@ -20,7 +21,7 @@ n_bath = 180
 m_bath = 4.65e-26  # N2 molecule, kg
 r_bath = 8.0e-9  # inflated ~50x over real N2 so collisions are frequent
 
-M_trac = 0.1 * m_bath
+M_trac = 10 * m_bath
 R_trac = 8.0e-8
 
 dt = 1.0e-12  # s
@@ -31,12 +32,18 @@ n = n_bath + 1  # index 0 is the tracer
 mass = np.concatenate(([M_trac], np.full(n_bath, m_bath)))
 radius = np.concatenate(([R_trac], np.full(n_bath, r_bath)))
 
-# positions: tracer at centre, bath on a jittered lattice that clears it
+# positions: tracer at centre, bath on a jittered lattice that clears it.
+# grow the lattice until enough sites survive the tracer exclusion, otherwise
+# a big tracer or a large n_bath silently leaves pos shorter than mass/radius
 k = int(np.ceil(np.sqrt(n_bath * 1.6)))
-gx, gy = np.meshgrid(np.linspace(0.05 * L, 0.95 * L, k),
-                     np.linspace(0.05 * L, 0.95 * L, k))
-cand = np.column_stack([gx.ravel(), gy.ravel()])
-cand = cand[np.hypot(*(cand - L / 2).T) > R_trac + 2 * r_bath]
+while True:
+    gx, gy = np.meshgrid(np.linspace(0.05 * L, 0.95 * L, k),
+                         np.linspace(0.05 * L, 0.95 * L, k))
+    cand = np.column_stack([gx.ravel(), gy.ravel()])
+    cand = cand[np.hypot(*(cand - L / 2).T) > R_trac + 2 * r_bath]
+    if len(cand) >= n_bath:
+        break
+    k += 2
 cand = rng.permutation(cand)[:n_bath]
 
 pos = np.vstack([[L / 2, L / 2], cand])

@@ -47,7 +47,9 @@ async function bootPython() {
   say('Loading the physics modules…');
   py.FS.mkdirTree('/home/pyodide/scipy');
   for (const path of PY_MODULES) {
-    const resp = await fetch('py/' + path);
+    // ?v= defeats the browser cache: a stale py/ file gives a traceback that
+    // contradicts the source in front of you. The files are a few KB.
+    const resp = await fetch('py/' + path + '?v=' + Date.now());
     if (!resp.ok) throw new Error('could not fetch py/' + path);
     py.FS.writeFile('/home/pyodide/' + path, await resp.text());
   }
